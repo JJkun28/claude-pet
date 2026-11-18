@@ -56,7 +56,7 @@ pub fn run() {
 
     if !app_running() {
         // 会话里任何事件都能把桌宠拉起来（桌宠中途被关掉也能自己回来），会话结束时就不必了
-        if !cfg.auto_launch || event == "SessionEnd" {
+        if !cfg.auto_launch || cfg.quit_by_user || event == "SessionEnd" {
             return;
         }
         launch_app();

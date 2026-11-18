@@ -29,6 +29,8 @@ pub struct AppConfig {
     pub auto_launch: bool,
     /// 右键「打开 Claude Code」启动什么：exe 路径或 shell:AppsFolder\… ；空 = 自动找 Claude 桌面版
     pub claude_app: String,
+    /// 右键「彻底退出」后为 true：hook 不再自动拉起桌宠，手动打开一次就恢复
+    pub quit_by_user: bool,
     /// 把收到的 hook 事件写进 hook-events.log，排查哪些 hook 没触发
     pub hook_log: bool,
     /// 首次启动是否已询问过接入 hooks
@@ -51,6 +53,7 @@ impl Default for AppConfig {
             stale_minutes: 0,
             auto_launch: true,
             claude_app: String::new(),
+            quit_by_user: false,
             hook_log: true,
             asked_hooks: false,
         }

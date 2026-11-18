@@ -38,6 +38,9 @@ const CMD_AUTOSTART: usize = 7;
 const CMD_OPEN_LOG: usize = 8;
 const CMD_QUIT: usize = 9;
 const CMD_OPEN_CLAUDE: usize = 10;
+const CMD_HIDE: usize = 11;
+/// 再次双击 exe 时，新进程发这个消息叫已在运行的桌宠现身
+const WM_SHOW_PET: u32 = WM_APP + 2;
 const CMD_STATE_BASE: usize = 100; // + WState 序号；+6 = 待机
 const CMD_SCALE_BASE: usize = 200;
 const CMD_PET_BASE: usize = 300;
@@ -104,6 +107,8 @@ struct App {
     menu_anims: Vec<String>,
     menu_pets: Vec<String>,
     udp_error: Option<String>,
+    /// 右键「隐藏」后为 true：窗口不显示、不跑动画，但照常记录会话状态
+    hidden: bool,
 }
 
 thread_local! {
@@ -263,6 +268,9 @@ impl App {
     }
 
     fn reset_frame_timer(&mut self) {
+        if self.hidden {
+            return;
+        }
         let ms = self.current().map(|p| p.sheet.frame_ms(p.frame)).unwrap_or(100).max(16);
         if ms != self.frame_ms {
             self.frame_ms = ms;
@@ -270,7 +278,34 @@ impl App {
         }
     }
 
+    fn hide(&mut self) {
+        self.hidden = true;
+        self.overlay = None;
+        self.drag = None;
+        unsafe {
+            ShowWindow(self.hwnd, SW_HIDE);
+            KillTimer(self.hwnd, TIMER_FRAME);
+        }
+        self.frame_ms = 0;
+        log_line(&self.cfg, "  （隐藏桌宠）");
+    }
+
+    fn show(&mut self) {
+        if !self.hidden {
+            return;
+        }
+        self.hidden = false;
+        log_line(&self.cfg, "  （重新显示桌宠）");
+        self.reset_frame_timer();
+        self.render();
+        unsafe { ShowWindow(self.hwnd, SW_SHOWNOACTIVATE) };
+        self.apply_topmost();
+    }
+
     fn tick(&mut self) {
+        if self.hidden {
+            return;
+        }
         if let Some(o) = self.overlay.as_mut() {
             o.frame += 1;
             if o.frame >= o.sheet.frames {
@@ -316,6 +351,9 @@ impl App {
     }
 
     fn render(&mut self) {
+        if self.hidden {
+            return;
+        }
         let Some(play) = self.current() else { return };
         let sheet = play.sheet.clone();
         let frame = play.frame;
@@ -391,6 +429,9 @@ impl App {
             let extra = [m.tool.as_deref(), m.nt.as_deref()].iter().flatten().cloned().collect::<Vec<_>>().join(" ");
             log_line(&self.cfg, &format!("{:<18} 会话 {sid} {extra}", m.e));
             self.store.apply(&m);
+            if self.hidden && m.e == "UserPromptSubmit" {
+                self.show();
+            }
         }
         self.reevaluate();
     }
@@ -494,7 +535,8 @@ impl App {
             add(m, MF_STRING, CMD_RELOAD, "重新加载配置和动画");
             add(m, MF_STRING, CMD_OPEN_DIR, "打开桌宠文件夹");
             AppendMenuW(m, MF_SEPARATOR, 0, std::ptr::null());
-            add(m, MF_STRING, CMD_QUIT, "退出");
+            add(m, MF_STRING, CMD_HIDE, "隐藏（下次对话时自动出现）");
+            add(m, MF_STRING, CMD_QUIT, "彻底退出（不再自动启动）");
             m
         }
     }
@@ -538,9 +580,13 @@ impl App {
                     ));
                 }
             }
-            CMD_QUIT => unsafe {
-                DestroyWindow(self.hwnd);
-            },
+            CMD_HIDE => self.hide(),
+            CMD_QUIT => {
+                // 记下「是你自己关的」：hook 不会再自动拉起，直到你手动打开一次
+                self.cfg.quit_by_user = true;
+                config::save(&self.cfg);
+                unsafe { DestroyWindow(self.hwnd) };
+            }
             i if (CMD_STATE_BASE..CMD_STATE_BASE + 7).contains(&i) => {
                 let st = WState::ALL.get(i - CMD_STATE_BASE).copied();
                 let pool = self.pool_for(st);
@@ -644,6 +690,7 @@ unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) 
         WM_TIMER if wp == TIMER_FRAME => with_app(|a| a.tick()).map(|_| 0),
         WM_TIMER if wp == TIMER_HOUSE => with_app(|a| a.housekeeping()).map(|_| 0),
         WM_HOOK_EVENT => with_app(|a| a.handle_events()).map(|_| 0),
+        WM_SHOW_PET => with_app(|a| a.show()).map(|_| 0),
         WM_LBUTTONDOWN => with_app(|a| {
             let mut c = POINT { x: 0, y: 0 };
             GetCursorPos(&mut c);
@@ -769,12 +816,23 @@ pub fn run() {
         let name = wide(hook::MUTEX_NAME);
         let mutex = CreateMutexW(std::ptr::null(), 1, name.as_ptr());
         if GetLastError() == ERROR_ALREADY_EXISTS {
-            return; // 已经在运行
+            // 已经在运行（可能被隐藏了）：叫它现身
+            let class = wide("ClaudePetNativeWindow");
+            let other = FindWindowW(class.as_ptr(), std::ptr::null());
+            if !other.is_null() {
+                PostMessageW(other, WM_SHOW_PET, 0, 0);
+            }
+            return;
         }
         let _keep = mutex;
         SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
-        let cfg = config::load();
+        let mut cfg = config::load();
+        if cfg.quit_by_user {
+            // 你手动打开了它：恢复 hook 自动拉起
+            cfg.quit_by_user = false;
+            config::save(&cfg);
+        }
         let pack = match Pack::load(&config::base_dir().join("pets").join(&cfg.pet)) {
             Ok(p) => p,
             Err(e) => {
@@ -864,6 +922,7 @@ pub fn run() {
             menu_anims: Vec::new(),
             menu_pets: Vec::new(),
             udp_error,
+            hidden: false,
         };
         app.start_base(None, None);
         app.schedule_idle_extra();

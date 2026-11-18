@@ -37,6 +37,7 @@ const CMD_OPEN_DIR: usize = 6;
 const CMD_AUTOSTART: usize = 7;
 const CMD_OPEN_LOG: usize = 8;
 const CMD_QUIT: usize = 9;
+const CMD_OPEN_CLAUDE: usize = 10;
 const CMD_STATE_BASE: usize = 100; // + WState 序号；+6 = 待机
 const CMD_SCALE_BASE: usize = 200;
 const CMD_PET_BASE: usize = 300;
@@ -441,6 +442,7 @@ impl App {
             if let Some(e) = &self.udp_error {
                 add(m, MF_STRING | MF_GRAYED, 0, e);
             }
+            add(m, MF_STRING, CMD_OPEN_CLAUDE, "打开 Claude Code");
             AppendMenuW(m, MF_SEPARATOR, 0, std::ptr::null());
 
             // 动作：按 pet.json 的 menu 分组，点哪个播哪个
@@ -528,6 +530,14 @@ impl App {
                 }
             }
             CMD_OPEN_DIR => open_path(&config::base_dir()),
+            CMD_OPEN_CLAUDE => {
+                if !open_claude(&self.cfg.claude_app) {
+                    return Some((
+                        "没找到 Claude 桌面版。\n可以在 config.json 的 claude_app 里填它的路径，然后右键「重新加载配置和动画」。".into(),
+                        MB_ICONWARNING,
+                    ));
+                }
+            }
             CMD_QUIT => unsafe {
                 DestroyWindow(self.hwnd);
             },
@@ -575,6 +585,30 @@ fn open_path(p: &std::path::Path) {
     unsafe {
         ShellExecuteW(std::ptr::null_mut(), op.as_ptr(), f.as_ptr(), std::ptr::null(), std::ptr::null(), SW_SHOWNORMAL);
     }
+}
+
+/// 启动（或切到）Claude 桌面版。已经开着时，Windows 会把现有窗口带到前台。
+fn open_claude(custom: &str) -> bool {
+    let shell_open = |target: &str| -> bool {
+        let (op, f) = (wide("open"), wide(target));
+        let r = unsafe {
+            ShellExecuteW(std::ptr::null_mut(), op.as_ptr(), f.as_ptr(), std::ptr::null(), std::ptr::null(), SW_SHOWNORMAL)
+        };
+        r as isize > 32
+    };
+    if !custom.trim().is_empty() {
+        return shell_open(custom.trim());
+    }
+    let local = std::env::var("LOCALAPPDATA").unwrap_or_default();
+    // 微软商店 / MSIX 版：装了才会有这个数据目录
+    if std::path::Path::new(&local).join("Packages").join("Claude_pzs8sxrjxfjjc").is_dir()
+        && shell_open(r"shell:AppsFolder\Claude_pzs8sxrjxfjjc!Claude")
+    {
+        return true;
+    }
+    // 官网安装包版
+    let exe = std::path::Path::new(&local).join("AnthropicClaude").join("claude.exe");
+    exe.is_file() && shell_open(&exe.display().to_string())
 }
 
 fn autostart_enabled() -> bool {

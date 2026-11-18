@@ -1,0 +1,221 @@
+{
+  "name": "鬼马史魁克",
+  "credit": "由 Codex 宠物包转换：基于荒野乱斗史魁克：鬼马史魁克开发的像素形象，白色液体幽灵桌宠，带蓝灰锁链、金色幽灵锁与紫窗背灯。",
+  "scale": 1.0,
+  "pixelated": true,
+  "animations": {
+    "待机": {
+      "file": "anims/idle.png",
+      "frames": 6,
+      "columns": 6,
+      "durations": [
+        280,
+        110,
+        110,
+        140,
+        140,
+        320
+      ]
+    },
+    "向右跑": {
+      "file": "anims/running-right.png",
+      "frames": 8,
+      "columns": 8,
+      "durations": [
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        220
+      ]
+    },
+    "向左跑": {
+      "file": "anims/running-left.png",
+      "frames": 8,
+      "columns": 8,
+      "durations": [
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        220
+      ]
+    },
+    "挥手": {
+      "file": "anims/waving.png",
+      "frames": 4,
+      "columns": 4,
+      "durations": [
+        140,
+        140,
+        140,
+        280
+      ]
+    },
+    "跳起来": {
+      "file": "anims/jumping.png",
+      "frames": 5,
+      "columns": 5,
+      "durations": [
+        140,
+        140,
+        140,
+        140,
+        280
+      ]
+    },
+    "失败": {
+      "file": "anims/failed.png",
+      "frames": 8,
+      "columns": 8,
+      "durations": [
+        140,
+        140,
+        140,
+        140,
+        140,
+        140,
+        140,
+        240
+      ]
+    },
+    "等你确认": {
+      "file": "anims/waiting.png",
+      "frames": 6,
+      "columns": 6,
+      "durations": [
+        150,
+        150,
+        150,
+        150,
+        150,
+        260
+      ]
+    },
+    "工作中": {
+      "file": "anims/running.png",
+      "frames": 6,
+      "columns": 6,
+      "durations": [
+        120,
+        120,
+        120,
+        120,
+        120,
+        220
+      ]
+    },
+    "检查": {
+      "file": "anims/review.png",
+      "frames": 6,
+      "columns": 6,
+      "durations": [
+        150,
+        150,
+        150,
+        150,
+        150,
+        280
+      ]
+    },
+    "转一圈": {
+      "file": "anims/look.png",
+      "frames": 16,
+      "columns": 16,
+      "durations": [
+        160,
+        160,
+        160,
+        160,
+        160,
+        160,
+        160,
+        260,
+        160,
+        160,
+        160,
+        160,
+        160,
+        160,
+        160,
+        260
+      ]
+    }
+  },
+  "states": {
+    "idle": [
+      "待机"
+    ],
+    "thinking": [
+      "检查"
+    ],
+    "working": [
+      "工作中"
+    ],
+    "result": [
+      "检查"
+    ],
+    "waiting": [
+      "等你确认"
+    ],
+    "success": [
+      "跳起来",
+      "挥手"
+    ],
+    "error": [
+      "失败"
+    ],
+    "drag": [
+      "向右跑"
+    ],
+    "drag_left": [
+      "向左跑"
+    ],
+    "drag_right": [
+      "向右跑"
+    ],
+    "click": [
+      "挥手",
+      "跳起来"
+    ]
+  },
+  "idle_extras": {
+    "min_secs": 30,
+    "max_secs": 90,
+    "pool": [
+      "挥手",
+      "转一圈",
+      "向左跑",
+      "向右跑",
+      "跳起来"
+    ]
+  },
+  "menu": [
+    {
+      "group": "工作状态",
+      "items": [
+        "检查",
+        "工作中",
+        "等你确认",
+        "跳起来",
+        "失败"
+      ]
+    },
+    {
+      "group": "小动作",
+      "items": [
+        "待机",
+        "挥手",
+        "转一圈",
+        "向左跑",
+        "向右跑"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,871 @@
+{
+  "name": "蓝发小女仆",
+  "credit": "素材来自 desk-pet / dsh-pet，原作者 https://github.com/PC2005-cloud/dsh-pet ，仅限个人非商用，分发须保留原作者地址",
+  "scale": 1.5,
+  "animations": {
+    "工作状态-思考冒泡": {
+      "file": "anims/gongzuozhuangtai-sikao-maopao.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "工作状态-忙碌点按": {
+      "file": "anims/gongzuozhuangtai-manglu-dianan.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "工作状态-清点归档": {
+      "file": "anims/gongzuozhuangtai-qingdian-guidang.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "工作状态-原地踱步张望": {
+      "file": "anims/gongzuozhuangtai-yuandi-duobu-zhangwang.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "工作状态-雀跃庆祝": {
+      "file": "anims/gongzuozhuangtai-queyue-qingzhu.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "工作状态-垂头叹气冒汗": {
+      "file": "anims/gongzuozhuangtai-chuitou-tanqi-maohan.png",
+      "frames": 59,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "待机呼吸休闲": {
+      "file": "anims/daiji-huxi-xiuxian.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "东张西望": {
+      "file": "anims/dongzhangxiwang.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "被鼠标拖拽悬空反馈": {
+      "file": "anims/beishubiao-tuozhuai-xuankong-fankui.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "点击回应-开心跃动": {
+      "file": "anims/dianji-huiying-kaixin-yuedong.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "点击回应-害羞惊讶": {
+      "file": "anims/dianji-huiying-haixiu-jingya.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "点击回应-傲娇生气": {
+      "file": "anims/dianji-huiying-aojiao-shengqi-ceshen-zhanshi.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "点击回应-挠痒咯咯笑": {
+      "file": "anims/dianji-huiying-naoyang-gegexiao.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "点击回应-元气挥手": {
+      "file": "anims/dianji-huiying-yuanqi-huishou.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "螃蟹走路": {
+      "file": "anims/pangxie-zoulu.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "原地漂浮踏步": {
+      "file": "anims/yuandi-piaofu-tabu.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "原地左转奔跑": {
+      "file": "anims/yuandi-zuozhuan-benpao.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "悠闲哼歌": {
+      "file": "anims/youxian-hengga.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "超大伸懒腰": {
+      "file": "anims/chaoda-shenlanyao.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "原地敲击桌面互动": {
+      "file": "anims/yuandi-qiaoji-zhuomian-hudong.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "原地重力下蹲压缩": {
+      "file": "anims/yuandi-zhongli-xiadun-yasuo.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "哈欠连天": {
+      "file": "anims/haqian-liantian.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "原地小憩沉眠": {
+      "file": "anims/yuandi-xiaoqi-chenmian.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "女仆屈膝礼仪": {
+      "file": "anims/nvpu-quxi-liyi.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "被吓一跳": {
+      "file": "anims/beixiayitiao-zhamao.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "小幅度原地360度旋转展示": {
+      "file": "anims/xiaofudu-yuandi-360du-xuanzhuan-zhanshi.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "偷吃零食被抓住": {
+      "file": "anims/touchi-lingshi-bei-zhuazhu.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "用鲸鱼尾巴拍打地面": {
+      "file": "anims/yong-jingyu-weiba-paidadi.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "打瞌睡被惊醒": {
+      "file": "anims/da-keshui-bei-jingxing.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "照镜子": {
+      "file": "anims/zhao-jingzi.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "整体换装试色": {
+      "file": "anims/zhengti-huanzhuang-shise.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "轻快记录": {
+      "file": "anims/qingkuai-jilu.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "写代码": {
+      "file": "anims/xie-daima.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "摇扇纳凉": {
+      "file": "anims/yaoshan-naliang.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "晨间刷牙": {
+      "file": "anims/chenjian-shuaya.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "原地专心玩魔方": {
+      "file": "anims/yuandi-zhuanxin-wan-mofang.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "原地蹲下玩玩具汽车": {
+      "file": "anims/yuandi-dunxia-wan-wanju-qiche.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "鲸鱼吐泡泡特效": {
+      "file": "anims/jingyu-tu-paopao-texiao.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "原地跳跃抓碎头顶物品": {
+      "file": "anims/yuandi-tiaoyue-zhuasui-touding-wupin.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "玩游戏气急败坏": {
+      "file": "anims/wan-youxi-qijibaituai.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "玩水枪": {
+      "file": "anims/wan-shuiqiang.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "小提琴演奏": {
+      "file": "anims/xiaotiqin-yanzou.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "蓝鲸现世": {
+      "file": "anims/lanjing-xianshi.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "优雅女仆舞": {
+      "file": "anims/youya-nvpuwu.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "轻快摇摆舞": {
+      "file": "anims/qingkuai-yaobaiwu.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "可爱宅舞": {
+      "file": "anims/keai-zhaiwu.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吹气球": {
+      "file": "anims/chui-qiqiu.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "动物环绕": {
+      "file": "anims/dongwu-huanrao.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "放风筝": {
+      "file": "anims/fang-fengzheng.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "拆礼物": {
+      "file": "anims/chai-liwu.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "变鸽子": {
+      "file": "anims/bian-gezi.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "扑克魔术": {
+      "file": "anims/puke-moshu.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "抽陀螺": {
+      "file": "anims/chou-tuoluo.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吹笛子": {
+      "file": "anims/chui-dizi.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "蝴蝶蜜蜂环绕头顶开花": {
+      "file": "anims/hudie-mifeng-huanrao-touding-kaihua.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "撸猫": {
+      "file": "anims/lu-mao.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "凭空生花": {
+      "file": "anims/pingkong-shenghua.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "骑木马": {
+      "file": "anims/qi-muma.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "三球抛接": {
+      "file": "anims/sanqiu-paojie.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "踢毽子": {
+      "file": "anims/ti-jianzi.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "下五子棋": {
+      "file": "anims/xiawuziqi.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "荡秋千": {
+      "file": "anims/dangqiuqian.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃白饭": {
+      "file": "anims/chi-baifan.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "大口吃零食": {
+      "file": "anims/dakou-chi-lingshi.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃Token": {
+      "file": "anims/chi-token.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃早餐": {
+      "file": "anims/chi-zaocan.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃午餐": {
+      "file": "anims/chi-wucan.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃晚餐": {
+      "file": "anims/chi-wancan.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃冰淇淋融化": {
+      "file": "anims/chi-bingqilin-ronghua.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃大闸蟹": {
+      "file": "anims/chi-dazhaxie.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃糖葫芦": {
+      "file": "anims/chi-tanghulu.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃长寿面": {
+      "file": "anims/chi-changshoumian.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃西瓜": {
+      "file": "anims/chi-xigua.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "涮火锅": {
+      "file": "anims/shuan-huoguo.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "被落叶淹没": {
+      "file": "anims/beiluoye-yanmo.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "中秋赏月吃月饼": {
+      "file": "anims/zhongqiu-shangyue-chi-yuebing.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "堆雪人": {
+      "file": "anims/duixueren.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "放烟花": {
+      "file": "anims/fang-yanhua.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃粽子": {
+      "file": "anims/chi-zongzi.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃年糕": {
+      "file": "anims/chi-niangao.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃青团": {
+      "file": "anims/chi-qingtuan.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃腊八粥": {
+      "file": "anims/chi-labazhou.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃重阳糕": {
+      "file": "anims/chi-chongyanggao.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "收红包": {
+      "file": "anims/shou-hongbao.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "写福字": {
+      "file": "anims/xie-fuzi.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "穿针乞巧": {
+      "file": "anims/chuanzhenqiqiao.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "舞狮头": {
+      "file": "anims/wu-shitou.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "讨糖南瓜灯": {
+      "file": "anims/taotang-nanguadeng.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "插茱萸赏菊": {
+      "file": "anims/cha-zhuyu-shangju.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "放河灯": {
+      "file": "anims/fanghedeng.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "萌化小幽灵": {
+      "file": "anims/menghua-xiaoyouling.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "装点圣诞树": {
+      "file": "anims/zhuangdian-shengdanshu.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "放孔明灯": {
+      "file": "anims/fang-kongmingdeng.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃汤圆": {
+      "file": "anims/chitangyuan.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "吃饺子": {
+      "file": "anims/chijiaozi.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "是啊，吃什么": {
+      "file": "anims/shia-chishenme.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "深度思考碎碎念": {
+      "file": "anims/shendu-sikao-suisuinian.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "碎碎念-擦桌碎碎念": {
+      "file": "anims/suisuinian-cazhuo-suisuinian.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "碎碎念-发呆碎碎念": {
+      "file": "anims/suisuinian-fadai-suisuinian.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    },
+    "碎碎念-对屏碎碎念": {
+      "file": "anims/suisuinian-duiping-suisuinian.png",
+      "frames": 120,
+      "columns": 12,
+      "fps": 12.5
+    }
+  },
+  "states": {
+    "idle": [
+      "待机呼吸休闲"
+    ],
+    "thinking": [
+      "工作状态-思考冒泡"
+    ],
+    "working": [
+      "工作状态-忙碌点按"
+    ],
+    "result": [
+      "工作状态-清点归档"
+    ],
+    "waiting": [
+      "工作状态-原地踱步张望"
+    ],
+    "success": [
+      "工作状态-雀跃庆祝"
+    ],
+    "error": [
+      "工作状态-垂头叹气冒汗"
+    ],
+    "drag": [
+      "被鼠标拖拽悬空反馈"
+    ],
+    "click": [
+      "点击回应-开心跃动",
+      "点击回应-害羞惊讶",
+      "点击回应-傲娇生气",
+      "点击回应-挠痒咯咯笑",
+      "点击回应-元气挥手"
+    ]
+  },
+  "idle_extras": {
+    "min_secs": 30,
+    "max_secs": 90,
+    "pool": [
+      "悠闲哼歌",
+      "超大伸懒腰",
+      "原地敲击桌面互动",
+      "原地重力下蹲压缩",
+      "哈欠连天",
+      "原地小憩沉眠",
+      "女仆屈膝礼仪",
+      "被吓一跳",
+      "小幅度原地360度旋转展示",
+      "偷吃零食被抓住",
+      "用鲸鱼尾巴拍打地面",
+      "打瞌睡被惊醒",
+      "照镜子",
+      "整体换装试色",
+      "轻快记录",
+      "写代码",
+      "摇扇纳凉",
+      "晨间刷牙",
+      "原地专心玩魔方",
+      "原地蹲下玩玩具汽车",
+      "鲸鱼吐泡泡特效",
+      "原地跳跃抓碎头顶物品",
+      "玩游戏气急败坏",
+      "玩水枪",
+      "小提琴演奏",
+      "蓝鲸现世",
+      "优雅女仆舞",
+      "轻快摇摆舞",
+      "可爱宅舞",
+      "吹气球",
+      "动物环绕",
+      "放风筝",
+      "拆礼物",
+      "变鸽子",
+      "扑克魔术",
+      "抽陀螺",
+      "吹笛子",
+      "蝴蝶蜜蜂环绕头顶开花",
+      "撸猫",
+      "凭空生花",
+      "骑木马",
+      "三球抛接",
+      "踢毽子",
+      "下五子棋",
+      "荡秋千",
+      "吃白饭",
+      "大口吃零食",
+      "吃Token",
+      "吃早餐",
+      "吃午餐",
+      "吃晚餐",
+      "吃冰淇淋融化",
+      "吃大闸蟹",
+      "吃糖葫芦",
+      "吃长寿面",
+      "吃西瓜",
+      "涮火锅",
+      "被落叶淹没",
+      "中秋赏月吃月饼",
+      "堆雪人",
+      "放烟花",
+      "吃粽子",
+      "吃年糕",
+      "吃青团",
+      "吃腊八粥",
+      "吃重阳糕",
+      "收红包",
+      "写福字",
+      "穿针乞巧",
+      "舞狮头",
+      "讨糖南瓜灯",
+      "插茱萸赏菊",
+      "放河灯",
+      "萌化小幽灵",
+      "装点圣诞树",
+      "放孔明灯",
+      "吃汤圆",
+      "吃饺子"
+    ]
+  },
+  "menu": [
+    {
+      "group": "工作状态",
+      "items": [
+        "工作状态-思考冒泡",
+        "工作状态-忙碌点按",
+        "工作状态-清点归档",
+        "工作状态-原地踱步张望",
+        "工作状态-雀跃庆祝",
+        "工作状态-垂头叹气冒汗"
+      ]
+    },
+    {
+      "group": "待机与互动",
+      "items": [
+        "待机呼吸休闲",
+        "东张西望",
+        "被鼠标拖拽悬空反馈",
+        "点击回应-开心跃动",
+        "点击回应-害羞惊讶",
+        "点击回应-傲娇生气",
+        "点击回应-挠痒咯咯笑",
+        "点击回应-元气挥手"
+      ]
+    },
+    {
+      "group": "移动",
+      "items": [
+        "螃蟹走路",
+        "原地漂浮踏步",
+        "原地左转奔跑"
+      ]
+    },
+    {
+      "group": "小动作",
+      "items": [
+        "悠闲哼歌",
+        "超大伸懒腰",
+        "原地敲击桌面互动",
+        "原地重力下蹲压缩",
+        "哈欠连天",
+        "原地小憩沉眠",
+        "女仆屈膝礼仪",
+        "被吓一跳",
+        "小幅度原地360度旋转展示",
+        "偷吃零食被抓住",
+        "用鲸鱼尾巴拍打地面",
+        "打瞌睡被惊醒",
+        "照镜子",
+        "整体换装试色",
+        "轻快记录",
+        "写代码",
+        "摇扇纳凉",
+        "晨间刷牙"
+      ]
+    },
+    {
+      "group": "玩耍",
+      "items": [
+        "原地专心玩魔方",
+        "原地蹲下玩玩具汽车",
+        "鲸鱼吐泡泡特效",
+        "原地跳跃抓碎头顶物品",
+        "玩游戏气急败坏",
+        "玩水枪",
+        "小提琴演奏",
+        "蓝鲸现世",
+        "优雅女仆舞",
+        "轻快摇摆舞",
+        "可爱宅舞",
+        "吹气球",
+        "动物环绕",
+        "放风筝",
+        "拆礼物",
+        "变鸽子",
+        "扑克魔术",
+        "抽陀螺",
+        "吹笛子",
+        "蝴蝶蜜蜂环绕头顶开花",
+        "撸猫",
+        "凭空生花",
+        "骑木马",
+        "三球抛接",
+        "踢毽子",
+        "下五子棋",
+        "荡秋千"
+      ]
+    },
+    {
+      "group": "吃什么",
+      "items": [
+        "吃白饭",
+        "大口吃零食",
+        "吃Token",
+        "吃早餐",
+        "吃午餐",
+        "吃晚餐",
+        "吃冰淇淋融化",
+        "吃大闸蟹",
+        "吃糖葫芦",
+        "吃长寿面",
+        "吃西瓜",
+        "涮火锅"
+      ]
+    },
+    {
+      "group": "时节",
+      "items": [
+        "被落叶淹没",
+        "中秋赏月吃月饼",
+        "堆雪人",
+        "放烟花",
+        "吃粽子",
+        "吃年糕",
+        "吃青团",
+        "吃腊八粥",
+        "吃重阳糕",
+        "收红包",
+        "写福字",
+        "穿针乞巧",
+        "舞狮头",
+        "讨糖南瓜灯",
+        "插茱萸赏菊",
+        "放河灯",
+        "萌化小幽灵",
+        "装点圣诞树",
+        "放孔明灯",
+        "吃汤圆",
+        "吃饺子"
+      ]
+    },
+    {
+      "group": "文字",
+      "items": [
+        "是啊，吃什么",
+        "深度思考碎碎念"
+      ]
+    },
+    {
+      "group": "碎碎念",
+      "items": [
+        "碎碎念-擦桌碎碎念",
+        "碎碎念-发呆碎碎念",
+        "碎碎念-对屏碎碎念"
+      ]
+    }
+  ]
+}

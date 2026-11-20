@@ -348,8 +348,13 @@ unsafe extern "system" fn edit_proc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM
                 return 0;
             }
         }
-        // 吞掉 Enter / Esc 对应的字符，免得多出一个换行或响一声
-        WM_CHAR if (wp == '\r' as usize && !shift) || wp == 0x1b => return 0,
+        // 多行 EDIT 自己不认 Ctrl+A，补上全选
+        WM_KEYDOWN if wp == 'A' as usize && GetKeyState(VK_CONTROL as i32) < 0 => {
+            SendMessageW(hwnd, EM_SETSEL, 0, -1isize as LPARAM);
+            return 0;
+        }
+        // 吞掉 Enter / Esc / Ctrl+A 对应的字符，免得多出一个换行或响一声
+        WM_CHAR if (wp == '\r' as usize && !shift) || wp == 0x1b || wp == 0x01 => return 0,
         _ => {}
     }
     if old == 0 {

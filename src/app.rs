@@ -1,7 +1,9 @@
 //! 桌宠窗口：Win32 分层窗口（逐像素透明、置顶、不进任务栏、不抢焦点），
 //! 用 UpdateLayeredWindow 直接贴预乘 BGRA 位图，不依赖任何浏览器内核。
 
+use crate::chat;
 use crate::config::{self, AppConfig};
+use crate::desktop;
 use crate::hook::{self, wide};
 use crate::install;
 use crate::pack::{Pack, Sheet};
@@ -27,6 +29,8 @@ use windows_sys::Win32::UI::WindowsAndMessaging::*;
 const WM_HOOK_EVENT: u32 = WM_APP + 1;
 const TIMER_FRAME: usize = 1;
 const TIMER_HOUSE: usize = 2;
+/// 对话框发送：等 Claude 窗口到前台、等页面渲染，然后打字
+const TIMER_SEND: usize = 3;
 
 const CMD_TOPMOST: usize = 1;
 const CMD_IDLE_EXTRAS: usize = 2;
@@ -39,6 +43,7 @@ const CMD_OPEN_LOG: usize = 8;
 const CMD_QUIT: usize = 9;
 const CMD_OPEN_CLAUDE: usize = 10;
 const CMD_HIDE: usize = 11;
+const CMD_CHAT: usize = 12;
 /// 再次双击 exe 时，新进程发这个消息叫已在运行的桌宠现身
 const WM_SHOW_PET: u32 = WM_APP + 2;
 const CMD_STATE_BASE: usize = 100; // + WState 序号；+6 = 待机
@@ -85,6 +90,20 @@ struct Drag {
     dir: i32,
 }
 
+enum SendPhase {
+    /// 已经发了 claude:// 链接，等 Claude 窗口到前台
+    Wait { deadline: Instant },
+    /// 窗口到前台了，等会话页面渲染、输入框拿到焦点
+    Settle { until: Instant },
+}
+
+struct PendingSend {
+    text: String,
+    /// 桌面版没开、需要冷启动
+    cold: bool,
+    phase: SendPhase,
+}
+
 struct App {
     hwnd: HWND,
     cfg: AppConfig,
@@ -109,6 +128,8 @@ struct App {
     udp_error: Option<String>,
     /// 右键「隐藏」后为 true：窗口不显示、不跑动画，但照常记录会话状态
     hidden: bool,
+    /// 对话框里按了发送、还没打进 Claude 的那条
+    pending: Option<PendingSend>,
 }
 
 thread_local! {
@@ -278,7 +299,87 @@ impl App {
         }
     }
 
+    fn anchor_rect(&self) -> RECT {
+        RECT { left: self.pos.0, top: self.pos.1, right: self.pos.0 + self.size.0, bottom: self.pos.1 + self.size.1 }
+    }
+
+    /// 对话框里列的会话：桌面版最近的会话，带上桌宠记录到的状态
+    fn chat_items(&self) -> Vec<chat::Item> {
+        desktop::list_sessions(15)
+            .into_iter()
+            .map(|s| {
+                let state = self.store.state_of(&s.cli_id).map(|st| st.label());
+                chat::Item { session: s, state }
+            })
+            .collect()
+    }
+
+    /// 对话框按了发送：让桌面版切到目标会话，然后用定时器等它准备好再打字
+    fn start_send(&mut self, req: chat::SendReq) {
+        let (id, title, cli) = match &req.session {
+            Some(s) => (s.id.as_str(), s.title.as_str(), s.cli_id.chars().take(8).collect::<String>()),
+            None => ("last", "最近的会话", "-".to_string()),
+        };
+        log_line(&self.cfg, &format!("对话框发送 → {title}（会话 {cli}），{} 字", req.text.chars().count()));
+        let cold = desktop::claude_window().is_none();
+        desktop::open_session(id);
+        let wait = Duration::from_secs(if cold { 20 } else { 4 });
+        self.pending = Some(PendingSend { text: req.text, cold, phase: SendPhase::Wait { deadline: Instant::now() + wait } });
+        unsafe { SetTimer(self.hwnd, TIMER_SEND, 100, None) };
+    }
+
+    /// 发送状态机；失败时返回要提示的话
+    fn send_tick(&mut self) -> Option<String> {
+        let Some(p) = self.pending.as_mut() else {
+            unsafe { KillTimer(self.hwnd, TIMER_SEND) };
+            return None;
+        };
+        let now = Instant::now();
+        let ok = match p.phase {
+            SendPhase::Wait { deadline } => {
+                if desktop::foreground_is_claude() {
+                    // 冷启动时桌面版还要加载会话列表才会跳转，多等一会
+                    let extra = if p.cold { 2500 } else { 0 };
+                    p.phase = SendPhase::Settle { until: now + Duration::from_millis(self.cfg.chat_delay_ms + extra) };
+                    return None;
+                }
+                if now < deadline {
+                    if let Some(w) = desktop::claude_window() {
+                        desktop::bring_claude_front(w);
+                    }
+                    return None;
+                }
+                false
+            }
+            SendPhase::Settle { until } => {
+                if now < until {
+                    return None;
+                }
+                desktop::foreground_is_claude() && desktop::type_text(&p.text, self.cfg.chat_auto_send)
+            }
+        };
+        let p = self.pending.take().unwrap();
+        unsafe { KillTimer(self.hwnd, TIMER_SEND) };
+        if ok {
+            log_line(&self.cfg, "  （已打进 Claude 桌面版）");
+            let pool = self.pack.states.get("click").cloned().unwrap_or_default();
+            if let Some(name) = self.pick(&pool, None) {
+                self.start_overlay(&name, Kind::Click);
+            }
+            None
+        } else {
+            log_line(&self.cfg, "  （没能切到 Claude 窗口，已复制到剪贴板）");
+            let copied = desktop::copy_to_clipboard(self.hwnd, &p.text);
+            Some(if copied {
+                "没能切到 Claude 桌面版的窗口。\n要发的话已经复制到剪贴板，切过去按 Ctrl+V 就行。".into()
+            } else {
+                "没能切到 Claude 桌面版的窗口，复制到剪贴板也失败了。".into()
+            })
+        }
+    }
+
     fn hide(&mut self) {
+        chat::close(true);
         self.hidden = true;
         self.overlay = None;
         self.drag = None;
@@ -405,6 +506,7 @@ impl App {
             };
             UpdateLayeredWindow(self.hwnd, std::ptr::null_mut(), &pt, &sz, dib.dc, &src, 0, &blend, ULW_ALPHA);
         }
+        chat::follow(self.anchor_rect());
     }
 
     fn free_dib(&mut self) {
@@ -484,6 +586,7 @@ impl App {
                 add(m, MF_STRING | MF_GRAYED, 0, e);
             }
             add(m, MF_STRING, CMD_OPEN_CLAUDE, "打开 Claude Code");
+            add(m, MF_STRING, CMD_CHAT, "和 Claude 说话…（双击桌宠也行）");
             AppendMenuW(m, MF_SEPARATOR, 0, std::ptr::null());
 
             // 动作：按 pet.json 的 menu 分组，点哪个播哪个
@@ -635,13 +738,7 @@ fn open_path(p: &std::path::Path) {
 
 /// 启动（或切到）Claude 桌面版。已经开着时，Windows 会把现有窗口带到前台。
 fn open_claude(custom: &str) -> bool {
-    let shell_open = |target: &str| -> bool {
-        let (op, f) = (wide("open"), wide(target));
-        let r = unsafe {
-            ShellExecuteW(std::ptr::null_mut(), op.as_ptr(), f.as_ptr(), std::ptr::null(), std::ptr::null(), SW_SHOWNORMAL)
-        };
-        r as isize > 32
-    };
+    let shell_open = desktop::shell_open;
     if !custom.trim().is_empty() {
         return shell_open(custom.trim());
     }
@@ -689,6 +786,27 @@ unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) 
     let handled: Option<LRESULT> = match msg {
         WM_TIMER if wp == TIMER_FRAME => with_app(|a| a.tick()).map(|_| 0),
         WM_TIMER if wp == TIMER_HOUSE => with_app(|a| a.housekeeping()).map(|_| 0),
+        WM_TIMER if wp == TIMER_SEND => {
+            if let Some(Some(text)) = with_app(|a| a.send_tick()) {
+                msgbox(hwnd, &text, MB_OK | MB_ICONWARNING);
+            }
+            Some(0)
+        }
+        chat::WM_CHAT_SEND => {
+            if lp != 0 {
+                let req = *Box::from_raw(lp as *mut chat::SendReq);
+                with_app(|a| a.start_send(req));
+            }
+            Some(0)
+        }
+        WM_LBUTTONDBLCLK => {
+            if chat::is_open() {
+                chat::close(true);
+            } else if let Some((anchor, items)) = with_app(|a| (a.anchor_rect(), a.chat_items())) {
+                chat::open(hwnd, anchor, items);
+            }
+            Some(0)
+        }
         WM_HOOK_EVENT => with_app(|a| a.handle_events()).map(|_| 0),
         WM_SHOW_PET => with_app(|a| a.show()).map(|_| 0),
         WM_LBUTTONDOWN => with_app(|a| {
@@ -741,6 +859,7 @@ unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) 
                 }
             }
             SetWindowPos(hwnd, std::ptr::null_mut(), a.pos.0, a.pos.1, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+            chat::follow(a.anchor_rect());
             0
         }),
         WM_LBUTTONUP => with_app(|a| {
@@ -773,7 +892,11 @@ unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) 
                 let id = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY, c.x, c.y, 0, hwnd, std::ptr::null());
                 DestroyMenu(menu);
                 PostMessageW(hwnd, WM_NULL, 0, 0);
-                if id > 0 {
+                if id as usize == CMD_CHAT {
+                    if let Some((anchor, items)) = with_app(|a| (a.anchor_rect(), a.chat_items())) {
+                        chat::open(hwnd, anchor, items);
+                    }
+                } else if id > 0 {
                     if let Some(Some((text, icon))) = with_app(|a| a.command(id as usize)) {
                         msgbox(hwnd, &text, MB_OK | icon);
                     }
@@ -844,7 +967,7 @@ pub fn run() {
         let hinst = GetModuleHandleW(std::ptr::null());
         let class = wide("ClaudePetNativeWindow");
         let wc = WNDCLASSW {
-            style: 0,
+            style: CS_DBLCLKS,
             lpfnWndProc: Some(wndproc),
             cbClsExtra: 0,
             cbWndExtra: 0,
@@ -923,6 +1046,7 @@ pub fn run() {
             menu_pets: Vec::new(),
             udp_error,
             hidden: false,
+            pending: None,
         };
         app.start_base(None, None);
         app.schedule_idle_extra();

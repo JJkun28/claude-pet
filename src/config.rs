@@ -35,6 +35,10 @@ pub struct AppConfig {
     pub hook_log: bool,
     /// 首次启动是否已询问过接入 hooks
     pub asked_hooks: bool,
+    /// 对话框：打完字自动按回车发送；false = 只把字打进 Claude 的输入框，由你自己按回车
+    pub chat_auto_send: bool,
+    /// 对话框：切到会话后等多久再打字（毫秒），给桌面版渲染页面、聚焦输入框的时间
+    pub chat_delay_ms: u64,
 }
 
 impl Default for AppConfig {
@@ -56,6 +60,8 @@ impl Default for AppConfig {
             quit_by_user: false,
             hook_log: true,
             asked_hooks: false,
+            chat_auto_send: true,
+            chat_delay_ms: 600,
         }
     }
 }

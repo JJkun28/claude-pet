@@ -176,6 +176,11 @@ impl Store {
             .map(|e| e.state)
     }
 
+    /// 某个会话（hook 的 session_id）当前的状态
+    pub fn state_of(&self, sid: &str) -> Option<WState> {
+        self.sessions.get(sid).map(|e| e.state)
+    }
+
     pub fn active_count(&self) -> usize {
         self.sessions.values().filter(|e| !e.state.terminal()).count()
     }

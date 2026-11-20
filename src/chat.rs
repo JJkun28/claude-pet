@@ -15,10 +15,15 @@ use windows_sys::Win32::UI::WindowsAndMessaging::*;
 
 /// 桌宠窗口收到它：lparam 是 Box<SendReq> 的裸指针
 pub const WM_CHAT_SEND: u32 = WM_APP + 3;
+/// 输入框内部：内容变了，重新算行数
+const WM_RELAYOUT: u32 = WM_APP + 10;
 
 const EM_SETSEL: u32 = 177;
 const EM_GETLINECOUNT: u32 = 186;
 const EM_SETMARGINS: u32 = 211;
+const EM_LINESCROLL: u32 = 182;
+const EM_SCROLLCARET: u32 = 183;
+const EM_GETFIRSTVISIBLELINE: u32 = 206;
 const EDIT_ID: usize = 1;
 const MAX_LINES: i32 = 5;
 const CMD_SESSION_BASE: usize = 100;
@@ -119,7 +124,8 @@ impl Chat {
         self.px(360.0)
     }
     fn edit_box_h(&self) -> i32 {
-        self.lines * self.line_h + self.px(10.0)
+        // 多留几像素：EDIT 只画能完整放下的行，差一像素最后一行就不显示
+        self.lines * self.line_h + self.px(13.0)
     }
     fn height(&self) -> i32 {
         self.pad() + self.header_h() + self.px(4.0) + self.edit_box_h() + self.footer_h() + self.pad() / 2
@@ -166,6 +172,7 @@ impl Chat {
                 SWP_NOZORDER | SWP_NOACTIVATE,
             );
             InvalidateRect(self.hwnd, std::ptr::null(), 1);
+            InvalidateRect(self.edit, std::ptr::null(), 1);
         }
     }
 
@@ -229,11 +236,23 @@ impl Chat {
     }
 
     fn update_lines(&mut self) {
-        let n = unsafe { SendMessageW(self.edit, EM_GETLINECOUNT, 0, 0) } as i32;
-        let n = n.clamp(1, MAX_LINES);
+        let total = unsafe { SendMessageW(self.edit, EM_GETLINECOUNT, 0, 0) } as i32;
+        let n = total.clamp(1, MAX_LINES);
         if n != self.lines {
             self.lines = n;
             self.layout();
+        }
+        unsafe {
+            // 字刚折到新一行时，输入框还没长高，EDIT 为了让光标可见已经把第一行滚上去了；
+            // 长高后要滚回顶部，否则前面的字看不见。超过 MAX_LINES 行才真的需要滚动。
+            let first = SendMessageW(self.edit, EM_GETFIRSTVISIBLELINE, 0, 0) as i32;
+            if total <= MAX_LINES {
+                if first > 0 {
+                    SendMessageW(self.edit, EM_LINESCROLL, 0, -(first as isize) as LPARAM);
+                }
+            } else {
+                SendMessageW(self.edit, EM_SCROLLCARET, 0, 0);
+            }
         }
     }
 }
@@ -377,6 +396,11 @@ unsafe extern "system" fn chat_proc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM
             }
         }
         WM_COMMAND if (wp & 0xffff) == EDIT_ID && ((wp >> 16) & 0xffff) as u32 == EN_CHANGE => {
+            // EN_CHANGE 发出后 EDIT 还会再把光标滚进视野，所以等它这一轮处理完再调高度、滚回顶部
+            PostMessageW(hwnd, WM_RELAYOUT, 0, 0);
+            return 0;
+        }
+        WM_RELAYOUT => {
             with_chat(|c| c.update_lines());
             return 0;
         }
@@ -435,7 +459,7 @@ pub fn open(owner: HWND, anchor: RECT, items: Vec<Item>) {
             WS_EX_TOOLWINDOW | WS_EX_TOPMOST,
             class.as_ptr(),
             title.as_ptr(),
-            WS_POPUP,
+            WS_POPUP | WS_CLIPCHILDREN, // 画背景时绕开输入框，免得盖住它
             0,
             0,
             10,
@@ -494,7 +518,7 @@ pub fn open(owner: HWND, anchor: RECT, items: Vec<Item>) {
             edit_bg: CreateSolidBrush(rgb(246, 246, 248)),
             scale,
             lines: 1,
-            line_h: tm.tmHeight.max(8),
+            line_h: (tm.tmHeight + tm.tmExternalLeading).max(8),
             anchor,
             menu_open: false,
         };
@@ -506,9 +530,10 @@ pub fn open(owner: HWND, anchor: RECT, items: Vec<Item>) {
             SetWindowTextW(edit, t.as_ptr());
             SendMessageW(edit, EM_SETSEL, 0, -1isize as LPARAM);
         }
+        // 先按真实宽度摆好 EDIT，再数行数（10×10 时数出来的行数不对）
         with_chat(|c| {
-            c.update_lines();
             c.layout();
+            c.update_lines();
         });
         ShowWindow(hwnd, SW_SHOW);
         SetForegroundWindow(hwnd);

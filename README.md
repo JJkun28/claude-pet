@@ -123,6 +123,13 @@ python -I tools/convert_desk_pet.py <desk-pet仓库>/desk-pet/assets dist/pets/m
 python -I tools/convert_codex_pet.py <Codex宠物文件夹> dist/pets/<新名字>
 ```
 
+`tools/build_zyf_pet.py` 把振翼发的 zyf 素材文件夹（各动作审阅版 GIF + 关键帧 PNG，左右飘行取 `v01-walk-review` 的原图）打成 `dist/pets/zyf`（需要 Pillow + numpy + scipy）。
+GIF 的浅灰底色会自动抠掉；所有动作按同一基线对齐，并预先缩到 2/3，默认显示大小 0.75：
+
+```bash
+python -I tools/build_zyf_pet.py <zyf素材文件夹> dist/pets/zyf
+```
+
 转完在右键「换宠物」里选它。Codex 第 2 版的十六方向注视会合成一段「转一圈」动作（暂不支持跟随鼠标转头）。
 
 ## 从源码编译
@@ -159,3 +166,5 @@ cargo test
 `dist/pets/maid` 的美术素材来自 [desk-pet](https://github.com/tg111/claude-code-desk-pet) / [dsh-pet](https://github.com/PC2005-cloud/dsh-pet)，**仅限个人非商用**，分发时须保留原作者地址 <https://github.com/PC2005-cloud/dsh-pet>。程序代码本身随意使用。
 
 `dist/pets/ghost-squeak`（鬼马史魁克）是 JJkun28 制作的荒野乱斗同人像素形象，仅限非商用；角色版权归 Supercell，与 Supercell 无关联。
+
+`dist/pets/zyf`（振翼发）是 JJkun28 制作的宝可梦同人像素形象，仅限非商用；角色版权归任天堂 / Creatures / GAME FREAK / The Pokémon Company，与其无关联。

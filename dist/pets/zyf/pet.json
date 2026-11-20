@@ -1,0 +1,223 @@
+{
+  "name": "振翼发",
+  "credit": "JJkun28 制作的宝可梦振翼发同人像素形象：左右飘行、从黑水潭探头、戴红色圆墨镜翻书、凝聚月光发射紫色光球。",
+  "scale": 0.75,
+  "pixelated": false,
+  "animations": {
+    "待机": {
+      "file": "anims/idle.png",
+      "frames": 12,
+      "columns": 8,
+      "durations": [
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130
+      ]
+    },
+    "挥手": {
+      "file": "anims/wave.png",
+      "frames": 6,
+      "columns": 6,
+      "durations": [
+        390,
+        180,
+        230,
+        340,
+        270,
+        230
+      ]
+    },
+    "不屑": {
+      "file": "anims/disdain.png",
+      "frames": 4,
+      "columns": 4,
+      "durations": [
+        380,
+        250,
+        650,
+        280
+      ]
+    },
+    "看书": {
+      "file": "anims/reading.png",
+      "frames": 6,
+      "columns": 6,
+      "durations": [
+        740,
+        220,
+        230,
+        260,
+        660,
+        250
+      ]
+    },
+    "黑池跃出": {
+      "file": "anims/pool-rise.png",
+      "frames": 17,
+      "columns": 8,
+      "durations": [
+        290,
+        210,
+        260,
+        160,
+        190,
+        150,
+        180,
+        220,
+        230,
+        240,
+        250,
+        310,
+        340,
+        430,
+        180,
+        180,
+        320
+      ]
+    },
+    "等你确认": {
+      "file": "anims/waiting.png",
+      "frames": 8,
+      "columns": 8,
+      "durations": [
+        180,
+        180,
+        180,
+        180,
+        180,
+        180,
+        180,
+        180
+      ]
+    },
+    "月下": {
+      "file": "anims/moon.png",
+      "frames": 15,
+      "columns": 8,
+      "durations": [
+        360,
+        170,
+        180,
+        200,
+        210,
+        220,
+        230,
+        310,
+        100,
+        100,
+        100,
+        130,
+        160,
+        330,
+        260
+      ]
+    },
+    "向左飘": {
+      "file": "anims/walk-left.png",
+      "frames": 8,
+      "columns": 8,
+      "durations": [
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        220
+      ]
+    },
+    "向右飘": {
+      "file": "anims/walk-right.png",
+      "frames": 8,
+      "columns": 8,
+      "durations": [
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        220
+      ]
+    }
+  },
+  "states": {
+    "idle": [
+      "待机"
+    ],
+    "thinking": [
+      "月下"
+    ],
+    "working": [
+      "看书"
+    ],
+    "result": [
+      "月下"
+    ],
+    "waiting": [
+      "等你确认"
+    ],
+    "success": [
+      "黑池跃出"
+    ],
+    "error": [
+      "不屑"
+    ],
+    "drag": [
+      "不屑"
+    ],
+    "drag_left": [
+      "向左飘"
+    ],
+    "drag_right": [
+      "向右飘"
+    ],
+    "click": [
+      "挥手",
+      "黑池跃出"
+    ]
+  },
+  "idle_extras": {
+    "min_secs": 30,
+    "max_secs": 90,
+    "pool": [
+      "挥手",
+      "看书",
+      "黑池跃出",
+      "向左飘",
+      "向右飘"
+    ]
+  },
+  "menu": [
+    {
+      "group": "工作状态",
+      "items": [
+        "月下",
+        "看书",
+        "等你确认",
+        "黑池跃出",
+        "不屑"
+      ]
+    },
+    {
+      "group": "小动作",
+      "items": [
+        "待机",
+        "挥手",
+        "向左飘",
+        "向右飘"
+      ]
+    }
+  ]
+}

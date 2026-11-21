@@ -42,7 +42,7 @@ CI 用 MSVC 工具链编译，并静态链接 C 运行库，用户电脑上不�
 | `src/state.rs` | 会话状态聚合和优先级（含单元测试） |
 | `src/hook.rs` | hook 客户端：读 stdin、找 Claude 进程、UDP 转发、自动拉起桌宠 |
 | `src/install.rs` | 读写 `~/.claude/settings.json`，文件夹移动后自动修正路径（含单元测试） |
-| `src/pack.rs` | 动画包加载、PNG 解码、缩放绘制 |
+| `src/pack.rs` | 动画包加载（pet.json / 按文件名自动识别）、PNG 与 GIF 解码、缩放绘制（含单元测试） |
 | `src/tray.rs` | 托盘图标：用宠物第一帧生成图标、左键显示隐藏、右键菜单（含单元测试） |
 | `src/config.rs` | `config.json`；exe 目录不可写时改存 `%APPDATA%\claude-pet` |
 

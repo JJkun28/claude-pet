@@ -6,6 +6,7 @@ description = "轻量原生 Windows 桌宠，跟随 Claude Code 的 hooks 实时
 license = "MIT"
 
 [dependencies]
+gif = "0.13"
 png = "0.17"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }

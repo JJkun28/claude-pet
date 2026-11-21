@@ -5,7 +5,10 @@
 
 ![桌宠跟随 Claude Code 状态切换动作](docs/preview.gif)
 
-单个 exe 不到 1 MB，运行时内存约 12 MB，不用安装，不用 Python 或 Node。自带三个形象（默认是像素风的鬼马史魁克，右键「换宠物」可切换），也可以[自己做](docs/pet-format.md)。
+单个 exe 不到 1 MB，运行时内存约 12 MB，不用安装，不用 Python 或 Node。自带三个形象（默认是像素风的鬼马史魁克，右键「换宠物」可切换）。
+
+想换成自己的形象？在 `pets/` 下新建一个文件夹，放进 `idle.gif`、`working.gif`、`waiting.gif` 这样按状态命名的 GIF 就行，
+不用写配置，也不用装 Python。详见[自己做动画包](docs/pet-format.md)。
 
 **[⬇ 下载最新版](https://github.com/JJkun28/claude-pet/releases/latest)**（下载 `claude-pet-<版本>-win64.zip`）
 
@@ -79,7 +82,7 @@
 
 - [使用说明](docs/usage.md)：全部操作、对话框、状态逻辑
 - [config.json 说明](docs/config.md)
-- [自己做动画包](docs/pet-format.md)：动画包格式、素材转换脚本
+- [自己做动画包](docs/pet-format.md)：放 GIF 就能用的做法、pet.json 格式、素材转换脚本
 - [开发](docs/development.md)：编译、发版、代码结构、工作原理
 
 ## 许可证与素材版权

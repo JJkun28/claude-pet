@@ -135,6 +135,8 @@ struct App {
 
 thread_local! {
     static APP: RefCell<Option<App>> = const { RefCell::new(None) };
+    /// 右键菜单正开着。菜单是模态循环，定时器照常触发；这期间不能再把桌宠提到最顶层，否则会压住菜单
+    static MENU_OPEN: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 }
 
 /// 借用全局 App；正在被借用（重入）时返回 None，调用方走默认处理
@@ -554,7 +556,7 @@ impl App {
             if self.store.reap(hook::process_alive) {
                 log_line(&self.cfg, "  （Claude 进程已退出，清掉对应会话）");
             }
-            if self.cfg.topmost && self.drag.is_none() {
+            if self.cfg.topmost && self.drag.is_none() && !MENU_OPEN.with(|m| m.get()) {
                 self.apply_topmost();
             }
         }
@@ -778,7 +780,7 @@ fn load_pack(cfg: &mut AppConfig) -> Result<Pack, String> {
         Ok(p) => return Ok(p),
         Err(e) => e,
     };
-    if pets.join(&cfg.pet).join("pet.json").is_file() {
+    if pets.join(&cfg.pet).is_dir() {
         return Err(err);
     }
     let mut candidates = vec![config::DEFAULT_PET.to_string()];
@@ -803,7 +805,9 @@ unsafe fn popup_menu(hwnd: HWND) {
     let mut c = POINT { x: 0, y: 0 };
     GetCursorPos(&mut c);
     SetForegroundWindow(hwnd);
+    MENU_OPEN.with(|m| m.set(true));
     let id = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY, c.x, c.y, 0, hwnd, std::ptr::null());
+    MENU_OPEN.with(|m| m.set(false));
     DestroyMenu(menu);
     PostMessageW(hwnd, WM_NULL, 0, 0);
     if id as usize == CMD_CHAT {

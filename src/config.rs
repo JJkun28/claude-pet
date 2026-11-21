@@ -1,7 +1,12 @@
-//! 程序配置：exe 同目录下的 config.json（便携，拷走整个文件夹即可）。
+//! 程序配置：默认放在 exe 同目录的 config.json（便携，拷走整个文件夹即可）。
+//! exe 所在文件夹写不进去（例如放在 Program Files 里）时，改用 %APPDATA%\claude-pet。
 
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use std::sync::OnceLock;
+
+/// 默认动画包；config.json 里指定的包不存在时，也先回退到它
+pub const DEFAULT_PET: &str = "ghost-squeak";
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(default)]
@@ -39,12 +44,14 @@ pub struct AppConfig {
     pub chat_auto_send: bool,
     /// 对话框：切到会话后等多久再打字（毫秒），给桌面版渲染页面、聚焦输入框的时间
     pub chat_delay_ms: u64,
+    /// 在任务栏通知区域显示托盘图标
+    pub tray: bool,
 }
 
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
-            pet: "maid".into(),
+            pet: DEFAULT_PET.into(),
             scale: None,
             x: None,
             y: None,
@@ -62,6 +69,7 @@ impl Default for AppConfig {
             asked_hooks: false,
             chat_auto_send: true,
             chat_delay_ms: 600,
+            tray: true,
         }
     }
 }
@@ -74,14 +82,32 @@ pub fn base_dir() -> PathBuf {
     exe_path().parent().map(|p| p.to_path_buf()).unwrap_or_else(|| PathBuf::from("."))
 }
 
+/// 放 config.json 和 hook-events.log 的文件夹：exe 同目录能写就用它，否则 %APPDATA%\claude-pet
+pub fn data_dir() -> PathBuf {
+    static DIR: OnceLock<PathBuf> = OnceLock::new();
+    DIR.get_or_init(|| {
+        let base = base_dir();
+        // 以追加方式打开（不存在就建一个空文件）：只测能不能写，不改内容
+        let writable = std::fs::OpenOptions::new().append(true).create(true).open(base.join("config.json")).is_ok();
+        if writable {
+            return base;
+        }
+        let Some(appdata) = std::env::var_os("APPDATA").map(PathBuf::from) else { return base };
+        let dir = appdata.join("claude-pet");
+        let _ = std::fs::create_dir_all(&dir);
+        dir
+    })
+    .clone()
+}
+
 fn config_path() -> PathBuf {
-    base_dir().join("config.json")
+    data_dir().join("config.json")
 }
 
 pub fn load() -> AppConfig {
     match std::fs::read_to_string(config_path()) {
-        Ok(s) => serde_json::from_str(s.trim_start_matches('\u{feff}')).unwrap_or_default(),
-        Err(_) => {
+        Ok(s) if !s.trim().is_empty() => serde_json::from_str(s.trim_start_matches('\u{feff}')).unwrap_or_default(),
+        _ => {
             let cfg = AppConfig::default();
             save(&cfg);
             cfg

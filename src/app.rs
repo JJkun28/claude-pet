@@ -8,6 +8,7 @@ use crate::hook::{self, wide};
 use crate::install;
 use crate::pack::{Pack, Sheet};
 use crate::state::{HookMsg, Store, WState};
+use crate::tray;
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::io::Write;
@@ -158,7 +159,7 @@ fn log_line(cfg: &AppConfig, line: &str) {
     if !cfg.hook_log {
         return;
     }
-    let path = config::base_dir().join("hook-events.log");
+    let path = config::data_dir().join("hook-events.log");
     let too_big = std::fs::metadata(&path).map(|m| m.len() > 512 * 1024).unwrap_or(false);
     let file = std::fs::OpenOptions::new().create(true).append(!too_big).write(true).truncate(too_big).open(&path);
     if let Ok(mut f) = file {
@@ -258,6 +259,9 @@ impl App {
         log_line(&self.cfg, &format!("  => 显示 {} → {}", from, s.map(|x| x.label()).unwrap_or("待机")));
         self.shown = s;
         self.shown_since = Instant::now();
+        if self.cfg.tray {
+            tray::set_tip(self.hwnd, &self.tray_tip());
+        }
         // 状态变化会打断「点击回应 / 待机小动作」，但不打断右键点播和拖拽
         if matches!(self.overlay.as_ref().map(|o| o.kind), Some(Kind::Click) | Some(Kind::IdleExtra)) {
             self.overlay = None;
@@ -558,8 +562,9 @@ impl App {
     }
 
     fn reload(&mut self) -> Result<(), String> {
-        let cfg = config::load();
-        let pack = Pack::load(&config::base_dir().join("pets").join(&cfg.pet))?;
+        let mut cfg = config::load();
+        let pack = load_pack(&mut cfg)?;
+        let tray_was = self.cfg.tray;
         self.cfg = cfg;
         self.pack = pack;
         self.cache.clear();
@@ -567,7 +572,38 @@ impl App {
         self.start_base(self.shown, None);
         self.reset_frame_timer();
         self.render();
+        match (tray_was, self.cfg.tray) {
+            (false, true) => self.tray_add(),
+            (true, false) => tray::remove(self.hwnd),
+            _ => self.tray_refresh_icon(),
+        }
         Ok(())
+    }
+
+    /// 托盘图标：用当前宠物待机动画的第一帧
+    fn tray_icon_sheet(&self) -> Option<Sheet> {
+        let name = self.pack.states.get("idle").and_then(|p| p.first()).or_else(|| self.pack.anims.first().map(|(n, _)| n))?;
+        self.pack.load_sheet(name).ok()
+    }
+
+    fn tray_tip(&self) -> String {
+        format!("{} · {}", self.pack.name, self.shown.map(|s| s.label()).unwrap_or("待机"))
+    }
+
+    fn tray_add(&mut self) {
+        if !self.cfg.tray {
+            return;
+        }
+        let sheet = self.tray_icon_sheet();
+        tray::add(self.hwnd, sheet.as_ref(), &self.tray_tip());
+    }
+
+    fn tray_refresh_icon(&mut self) {
+        if !self.cfg.tray {
+            return;
+        }
+        let sheet = self.tray_icon_sheet();
+        tray::set_icon(self.hwnd, sheet.as_ref(), &self.tray_tip());
     }
 
     fn build_menu(&mut self) -> HMENU {
@@ -638,7 +674,11 @@ impl App {
             add(m, MF_STRING, CMD_RELOAD, "重新加载配置和动画");
             add(m, MF_STRING, CMD_OPEN_DIR, "打开桌宠文件夹");
             AppendMenuW(m, MF_SEPARATOR, 0, std::ptr::null());
-            add(m, MF_STRING, CMD_HIDE, "隐藏（下次对话时自动出现）");
+            if self.hidden {
+                add(m, MF_STRING, CMD_HIDE, "显示桌宠");
+            } else {
+                add(m, MF_STRING, CMD_HIDE, "隐藏（下次对话时自动出现）");
+            }
             add(m, MF_STRING, CMD_QUIT, "彻底退出（不再自动启动）");
             m
         }
@@ -668,7 +708,7 @@ impl App {
                 self.store.clear();
                 self.set_shown(None);
             }
-            CMD_OPEN_LOG => open_path(&config::base_dir().join("hook-events.log")),
+            CMD_OPEN_LOG => open_path(&config::data_dir().join("hook-events.log")),
             CMD_RELOAD => {
                 if let Err(e) = self.reload() {
                     return Some((e, MB_ICONERROR));
@@ -683,6 +723,7 @@ impl App {
                     ));
                 }
             }
+            CMD_HIDE if self.hidden => self.show(),
             CMD_HIDE => self.hide(),
             CMD_QUIT => {
                 // 记下「是你自己关的」：hook 不会再自动拉起，直到你手动打开一次
@@ -726,6 +767,54 @@ impl App {
             _ => {}
         }
         None
+    }
+}
+
+/// 加载 config 里指定的动画包。包整个不见了（例如删掉了旧的默认宠物）时，
+/// 换成默认包或第一个能用的包并写回 config；包还在但坏了就照常报错，不悄悄换掉。
+fn load_pack(cfg: &mut AppConfig) -> Result<Pack, String> {
+    let pets = config::base_dir().join("pets");
+    let err = match Pack::load(&pets.join(&cfg.pet)) {
+        Ok(p) => return Ok(p),
+        Err(e) => e,
+    };
+    if pets.join(&cfg.pet).join("pet.json").is_file() {
+        return Err(err);
+    }
+    let mut candidates = vec![config::DEFAULT_PET.to_string()];
+    candidates.extend(crate::pack::list_packs(&pets).into_iter().map(|(dir, _)| dir));
+    for dir in candidates {
+        if dir == cfg.pet {
+            continue;
+        }
+        if let Ok(p) = Pack::load(&pets.join(&dir)) {
+            cfg.pet = dir;
+            cfg.scale = None;
+            config::save(cfg);
+            return Ok(p);
+        }
+    }
+    Err(err)
+}
+
+/// 右键菜单（桌宠和托盘图标共用）。菜单是模态循环，期间还会收到定时器消息：建菜单和处理命令分两次借用
+unsafe fn popup_menu(hwnd: HWND) {
+    let Some(menu) = with_app(|a| a.build_menu()) else { return };
+    let mut c = POINT { x: 0, y: 0 };
+    GetCursorPos(&mut c);
+    SetForegroundWindow(hwnd);
+    let id = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY, c.x, c.y, 0, hwnd, std::ptr::null());
+    DestroyMenu(menu);
+    PostMessageW(hwnd, WM_NULL, 0, 0);
+    if id as usize == CMD_CHAT {
+        with_app(|a| a.show());
+        if let Some((anchor, items)) = with_app(|a| (a.anchor_rect(), a.chat_items())) {
+            chat::open(hwnd, anchor, items);
+        }
+    } else if id > 0 {
+        if let Some(Some((text, icon))) = with_app(|a| a.command(id as usize)) {
+            msgbox(hwnd, &text, MB_OK | icon);
+        }
     }
 }
 
@@ -884,24 +973,23 @@ unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) 
             0
         }),
         WM_RBUTTONUP => {
-            // 菜单是模态循环，期间还会收到定时器消息：建菜单和处理命令分两次借用
-            if let Some(menu) = with_app(|a| a.build_menu()) {
-                let mut c = POINT { x: 0, y: 0 };
-                GetCursorPos(&mut c);
-                SetForegroundWindow(hwnd);
-                let id = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY, c.x, c.y, 0, hwnd, std::ptr::null());
-                DestroyMenu(menu);
-                PostMessageW(hwnd, WM_NULL, 0, 0);
-                if id as usize == CMD_CHAT {
-                    if let Some((anchor, items)) = with_app(|a| (a.anchor_rect(), a.chat_items())) {
-                        chat::open(hwnd, anchor, items);
-                    }
-                } else if id > 0 {
-                    if let Some(Some((text, icon))) = with_app(|a| a.command(id as usize)) {
-                        msgbox(hwnd, &text, MB_OK | icon);
-                    }
+            popup_menu(hwnd);
+            Some(0)
+        }
+        tray::WM_TRAY => {
+            match lp as u32 {
+                // 左键：显示 / 隐藏切换
+                WM_LBUTTONUP => {
+                    with_app(|a| if a.hidden { a.show() } else { a.hide() });
                 }
+                WM_RBUTTONUP | WM_CONTEXTMENU => popup_menu(hwnd),
+                _ => {}
             }
+            Some(0)
+        }
+        m if m != 0 && m == tray::taskbar_created() => {
+            // 资源管理器重启后托盘图标会丢，重新加一次
+            with_app(|a| a.tray_add());
             Some(0)
         }
         WM_DPICHANGED => with_app(|a| a.render()).map(|_| 0),
@@ -912,6 +1000,7 @@ unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) 
                 config::save(&a.cfg);
                 a.free_dib();
             });
+            tray::remove(hwnd);
             PostQuitMessage(0);
             Some(0)
         }
@@ -956,7 +1045,7 @@ pub fn run() {
             cfg.quit_by_user = false;
             config::save(&cfg);
         }
-        let pack = match Pack::load(&config::base_dir().join("pets").join(&cfg.pet)) {
+        let pack = match load_pack(&mut cfg) {
             Ok(p) => p,
             Err(e) => {
                 msgbox(std::ptr::null_mut(), &format!("动画包加载失败：\n{e}"), MB_OK | MB_ICONERROR);
@@ -1056,14 +1145,30 @@ pub fn run() {
             app.pos = initial_pos(&app.cfg, w, h);
         }
         log_line(&app.cfg, &format!("—— 桌宠启动，动画包「{}」，{} 段动画 ——", app.pack.name, app.pack.anims.len()));
+        // 文件夹被移动过：hooks 和开机自启里记的还是旧路径，改成当前 exe
+        let repair_err = match install::repair_path() {
+            Some(Ok(_)) => {
+                log_line(&app.cfg, &format!("hooks 指向旧路径，已改为 {}", config::exe_path().display()));
+                None
+            }
+            Some(Err(e)) => Some(e),
+            None => None,
+        };
+        if autostart_enabled() {
+            set_autostart(true);
+        }
         app.reset_frame_timer();
         app.render();
         let ask_hooks = !app.cfg.asked_hooks && !install::is_installed();
         APP.with(|a| *a.borrow_mut() = Some(app));
+        with_app(|a| a.tray_add());
 
         ShowWindow(hwnd, SW_SHOWNOACTIVATE);
         SetTimer(hwnd, TIMER_HOUSE, 500, None);
 
+        if let Some(e) = repair_err {
+            msgbox(hwnd, &format!("桌宠的位置变了，但没能更新 Claude Code 的 hooks：\n{e}\n\n可以在右键菜单里把「接入 Claude Code」关掉再打开一次。"), MB_OK | MB_ICONWARNING);
+        }
         if ask_hooks {
             let r = msgbox(
                 hwnd,

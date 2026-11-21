@@ -15,6 +15,7 @@ mod hook;
 mod install;
 mod pack;
 mod state;
+mod tray;
 
 fn console_print(s: &str) {
     use windows_sys::Win32::System::Console::{AttachConsole, ATTACH_PARENT_PROCESS};

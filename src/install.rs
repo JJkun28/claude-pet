@@ -82,15 +82,40 @@ fn strip_ours(m: &mut Map<String, Value>) -> usize {
     removed
 }
 
+/// settings.json 里所有属于本程序的 hook 命令
+fn our_commands(m: &Map<String, Value>) -> Vec<String> {
+    let Some(Value::Object(hooks)) = m.get("hooks") else { return Vec::new() };
+    hooks
+        .values()
+        .filter_map(|v| v.as_array())
+        .flatten()
+        .filter_map(|g| g.get("hooks").and_then(|h| h.as_array()))
+        .flatten()
+        .filter_map(|h| h.get("command").and_then(|c| c.as_str()))
+        .filter(|c| is_ours(c))
+        .map(str::to_string)
+        .collect()
+}
+
+/// 已接入，但记录的 exe 路径和 `cmd` 不一致（文件夹被移动或换了一份拷贝）
+fn path_is_stale(m: &Map<String, Value>, cmd: &str) -> bool {
+    let norm = |s: &str| s.trim().to_lowercase().replace('\\', "/");
+    let want = norm(cmd);
+    our_commands(m).iter().any(|c| norm(c) != want)
+}
+
 pub fn is_installed() -> bool {
-    let Ok(m) = read() else { return false };
-    let Some(Value::Object(hooks)) = m.get("hooks") else { return false };
-    hooks.values().filter_map(|v| v.as_array()).flatten().any(|g| {
-        g.get("hooks")
-            .and_then(|h| h.as_array())
-            .map(|hs| hs.iter().any(|h| h.get("command").and_then(|c| c.as_str()).map(is_ours).unwrap_or(false)))
-            .unwrap_or(false)
-    })
+    read().map(|m| !our_commands(&m).is_empty()).unwrap_or(false)
+}
+
+/// 启动时调用：已接入但 hooks 指向的不是当前这个 exe 时，自动改成当前路径。
+/// 没接入或路径没变时返回 None，不碰 settings.json。
+pub fn repair_path() -> Option<Result<String, String>> {
+    let m = read().ok()?;
+    if !path_is_stale(&m, &our_command()) {
+        return None;
+    }
+    Some(install())
 }
 
 pub fn install() -> Result<String, String> {
@@ -126,4 +151,37 @@ pub fn uninstall() -> Result<String, String> {
     }
     write(&m)?;
     Ok(format!("已从 Claude Code 断开（移除 {n} 条 hook）。"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn settings_with(cmds: &[&str]) -> Map<String, Value> {
+        let groups: Vec<Value> = cmds.iter().map(|c| json!({ "hooks": [{ "type": "command", "command": c }] })).collect();
+        let Value::Object(m) = json!({ "hooks": { "Stop": groups } }) else { unreachable!() };
+        m
+    }
+
+    #[test]
+    fn stale_path_detection() {
+        let cur = "\"D:/pet/claude-pet.exe\" hook";
+        // 没接入：不算过期
+        assert!(!path_is_stale(&Map::new(), cur));
+        assert!(!path_is_stale(&settings_with(&["other-tool --flag"]), cur));
+        // 路径一致（大小写、斜杠不同也算一致）
+        assert!(!path_is_stale(&settings_with(&[cur]), cur));
+        assert!(!path_is_stale(&settings_with(&[r#""d:\PET\claude-pet.exe" hook"#]), cur));
+        // 文件夹被移动过
+        assert!(path_is_stale(&settings_with(&["\"C:/Users/a/Downloads/dist/claude-pet.exe\" hook"]), cur));
+        assert!(path_is_stale(&settings_with(&[cur, "\"E:/old/claude-pet.exe\" hook"]), cur));
+    }
+
+    #[test]
+    fn strip_keeps_other_hooks() {
+        let mut m = settings_with(&["\"E:/old/claude-pet.exe\" hook", "other-tool"]);
+        assert_eq!(strip_ours(&mut m), 1);
+        assert_eq!(our_commands(&m).len(), 0);
+        assert_eq!(m["hooks"]["Stop"].as_array().unwrap().len(), 1);
+    }
 }

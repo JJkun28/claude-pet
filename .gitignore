@@ -1,3 +1,4 @@
 /target/
 /dist/config.json
 /dist/hook-events.log
+/dist/claude-pet.exe

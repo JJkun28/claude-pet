@@ -1,5 +1,8 @@
 """生成 README 用的预览动图：三个动画包同步演示 待机→思考→工作→等待→完成。
 用法：python -I tools/make_preview.py dist/pets docs/preview.gif（需要 Pillow，字体用 Windows 自带的微软雅黑）
+只要某几个状态：第三个参数写状态名，逗号分隔，例如
+      python -I tools/make_preview.py dist/pets docs/preview-working.gif working
+只有一个状态时，时长取三个动画里最长那段的完整一轮。
 """
 import json
 import math
@@ -12,6 +15,9 @@ PETS_DIR = Path(sys.argv[1])
 OUT = Path(sys.argv[2])
 PETS = ["ghost-squeak", "zyf", "maid"]
 STATES = [("idle", "待机"), ("thinking", "思考中"), ("working", "工作中"), ("waiting", "等待你确认"), ("success", "完成")]
+if len(sys.argv) > 3:
+    keep = sys.argv[3].split(",")
+    STATES = [s for s in STATES if s[0] in keep]
 STATE_MS = 2200
 TICK = 100  # 每帧 100ms
 PET_H = 170
@@ -95,6 +101,10 @@ def pill_row(draw, active):
         draw.text((x + w / 2, y + 17), lab, font=font_b if on else font, fill=(255, 255, 255) if on else MUTED, anchor="mm")
         x += w + gap
 
+
+if len(STATES) == 1:
+    # 单个状态：放满最长那段动画的一整轮，GIF 循环时不会在半截跳回去
+    STATE_MS = math.ceil(max(a[STATES[0][0]].total for a in packs) / TICK) * TICK
 
 frames = []
 total_ms = STATE_MS * len(STATES)
